@@ -5,7 +5,7 @@ public class Timer extends Thread{
 	
 	public Timer(Long t) {
 		time = t;
-		start();
+		
 	}
 	
 	@Override

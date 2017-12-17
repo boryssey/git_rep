@@ -5,13 +5,16 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
+import org.omg.Messaging.SYNC_WITH_TRANSPORT;
+
 public class MulticastClient extends Thread {
 	MulticastSocket socket = null;
-	private boolean t = false;
+	private boolean CLKsent = false;
 	private Clock clock;
 	private InetAddress address;
+	private long sync_time;
 
-	public MulticastClient(int init) {
+	public MulticastClient(int init, long sync_time) {
 		super("MulticastClient");
 		try {
 			socket = new MulticastSocket(9999);
@@ -22,35 +25,55 @@ public class MulticastClient extends Thread {
 			e.printStackTrace();
 		}
 		clock = new Clock(init);
+		this.sync_time = sync_time;
+		new Thread() {
+			@Override
+			public void run() {
+				while (true) {
+					try {
+						sleep(sync_time);
+						sendCLK();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+		}.start();
+		// startSyncThread();
 	}
 
-	public void changebool() {
-		t = true;
+	// public void startSyncThread() {
+	// new Thread() {
+	// @Override
+	// public void run() {
+	// while(al) {
+	// try {
+	// sleep(getSTime());
+	// sendCLK();
+	// } catch (InterruptedException e) {
+	// // TODO Auto-generated catch block
+	// e.printStackTrace();
+	// }
+	// }
+	// }
+	// }.start();
+	// }
+
+
+	public long getSTime() {
+		return sync_time;
 	}
 
-	public void sendCLK() throws IOException{
+	public void sendCLK() {
 		try {
-			new MulticastServer("CLK");
+			new MulticastMessage("CLK");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		Timer t = new Timer((long) 10);
-		DatagramPacket packet;
-		int count = 0;
-		long total = 0;
-		byte[] buf = new byte[256];
-		while (t.isAlive()) {
-			packet = new DatagramPacket(buf, buf.length);
-			socket.receive(packet);
-			String received = new String(packet.getData(), 0, packet.getLength());
-			try {
-				total += Long.parseLong(received);
-				count++;
-			} catch(NumberFormatException e) {
-			}
-		}
-		clock.setClock(((int)total)/count);
+		CLKsent = false;
+
 	}
 
 	@Override
@@ -72,10 +95,28 @@ public class MulticastClient extends Thread {
 				String received = new String(packet.getData(), 0, packet.getLength());
 				System.out.println(received + " (received Client Mac)");
 				if (received.equals("Hello")) {
-					new MulticastServer("Good Morning from Mac");
+					new MulticastMessage("Good Morning from Mac");
 				}
 				if (received.equals("CLK")) {
-					new MulticastServer(clock.getClock() + "");
+					new MulticastMessage(clock.getClock() + "");
+				}
+				if(CLKsent && received.matches("\\b([0-9])\\d+\\b")) {
+					Timer t = new Timer((long) 50);
+					t.start();
+					int count = 0;
+					long total = 0;
+					while (t.isAlive()) {
+						
+						try {
+							total += Long.parseLong(received);
+							count++;
+						} catch (NumberFormatException e) {
+						}
+					}
+					clock.setClock(((int) total) / count);
+					count = 0;
+					total = 0;
+					CLKsent = false;
 				}
 
 			}

@@ -60,7 +60,6 @@ public class MulticastClient extends Thread {
 	// }.start();
 	// }
 
-
 	public long getSTime() {
 		return sync_time;
 	}
@@ -68,18 +67,22 @@ public class MulticastClient extends Thread {
 	public void sendCLK() {
 		try {
 			new MulticastMessage("CLK");
+			CLKsent = true;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		CLKsent = false;
+		
 
 	}
-
+	boolean thr = false;
+	int count = 0;
+	int total = 0;
+	int s = 0;
+	
 	@Override
 	public void run() {
 		boolean f = true;
-
 		System.setProperty("java.net.preferIPv4Stack", "true");
 		try {
 
@@ -92,34 +95,36 @@ public class MulticastClient extends Thread {
 
 				packet = new DatagramPacket(buf, buf.length);
 				socket.receive(packet);
-				String received = new String(packet.getData(), 0, packet.getLength());
-				System.out.println(received + " (received Client Mac)");
-				if (received.equals("Hello")) {
-					new MulticastMessage("Good Morning from Mac");
-				}
+				String received;
+				received = new String(packet.getData(), 0, packet.getLength());
+				System.out.println(received + " (received)");
 				if (received.equals("CLK")) {
 					new MulticastMessage(clock.getClock() + "");
 				}
 				if(CLKsent && received.matches("\\b([0-9])\\d+\\b")) {
-					Timer t = new Timer((long) 50);
-					t.start();
-					int count = 0;
-					long total = 0;
-					while (t.isAlive()) {
-						
-						try {
-							total += Long.parseLong(received);
-							count++;
-						} catch (NumberFormatException e) {
-						}
+					count++;
+					total += Integer.parseInt(received);
+					if(!thr) {
+						thr = true;
+						new Thread() {
+							@Override
+							public void run() {
+								try {
+									sleep(100);
+									thr = false;
+									CLKsent = false;
+									s = total/count;
+									clock.setClock(s);
+									System.out.println(s + " synchronized");
+									total = count = 0;
+								} catch (InterruptedException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+							}
+						}.start();
 					}
-					clock.setClock(((int) total) / count);
-					System.out.println(total/count);
-					count = 0;
-					total = 0;
-					CLKsent = false;
 				}
-
 			}
 			socket.leaveGroup(address);
 			socket.close();

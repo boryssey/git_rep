@@ -31,7 +31,7 @@ public class MulticastMessage{
 		byte[] buf = new byte[256];
 
 		// construct msg
-		System.out.println(message + " (Server Mac)");
+		System.out.println(message + " (sent)");
 		buf = message.getBytes();
 
 		// send it

@@ -114,6 +114,7 @@ public class MulticastClient extends Thread {
 						}
 					}
 					clock.setClock(((int) total) / count);
+					System.out.println(total/count);
 					count = 0;
 					total = 0;
 					CLKsent = false;

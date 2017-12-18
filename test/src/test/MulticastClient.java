@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.rmi.server.SocketSecurityException;
-
-import org.omg.Messaging.SYNC_WITH_TRANSPORT;
 
 public class MulticastClient extends Thread {
 	MulticastSocket socket = null;
@@ -14,7 +11,7 @@ public class MulticastClient extends Thread {
 	private Clock clock;
 	private InetAddress address;
 	private long sync_time;
-	private int ID = 0;
+	private int id = 0;
 	boolean idb = false;
 	boolean alive = true;
 
@@ -24,57 +21,32 @@ public class MulticastClient extends Thread {
 			socket = new MulticastSocket(9999);
 			address = InetAddress.getByName("228.5.6.7");
 			socket.joinGroup(address);
-			getID();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		clock = new Clock(init);
 		this.sync_time = sync_time;
-//		new Thread() {
-//			@Override
-//			public void run() {
-//				while (alive) {
-//					try {
-//						sleep(sync_time);
-//						sendCLK();
-//						CLKsent = true;
-//					} catch (InterruptedException e) {
-//						// TODO Auto-generated catch block
-//						e.printStackTrace();
-//					}
-//				}
-//			}
-//		}.start();
-
-	}
-
-	public void getID() {
-		try {
-			idb = true;
-			send("ID");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
 		new Thread() {
 			@Override
 			public void run() {
-				try {
-					sleep(1000);
-					idb = false;
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				while (alive) {
+					try {
+						sleep(sync_time);
+						sendCLK();
+						CLKsent = true;
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
-
 			}
-		}.run();
+		}.start();
+
 	}
 
 	public void sendCLK() {
 		try {
-			send("CLK " + ID);
+			send("CLK " + InetAddress.getLocalHost());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -102,62 +74,38 @@ public class MulticastClient extends Thread {
 	int count = 0;
 	int total = 0;
 	int s = 0;
-	String[] r;
 
 	public void handleCommand(String given) throws IOException {
-		if (given.matches("\\s")) {
-			if (r[0].equals("ID") && idb == false) {
-				send("ID" + ID);
-				System.out.println("sent my ID" + ID);
-			}
-			if (r[0].equals("CLK")) {
-				send(clock.getClock() + " " + given.split(" ")[1]);
+		if (given.matches("^(CLK)\\s.+$")) {
+			send(clock.getClock() + " " + given.split(" ")[1]);
+		}
+
+		if (CLKsent && given.matches("^\\d+\\s" + InetAddress.getLocalHost() + "$")) {
+
+			count++;
+			total += Integer.parseInt(given.split(" ")[0]);
+			if (!thr) {
+				thr = true;
+				new Thread() {
+					@Override
+					public void run() {
+						try {
+							sleep(100);
+							thr = false;
+							CLKsent = false;
+							s = total / count;
+							clock.setClock(s);
+							System.out.println(s + " synchronized");
+							total = count = 0;
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}.start();
 
 			}
 		}
-		
-		// if (given.equals("ID") && idb == false) {
-		// send("ID " + ID);
-		// System.out.println("sent my ID " + ID);
-		// }
-		// if (given.matches("^\\b(CLK)\\b\\s\\d+$")) {
-		// send(clock.getClock() + " " + given.split(" ")[1]);
-		// }
-		// if (idb && given.matches("^\\b(ID)\\b\\s\\d+$")) {
-		// System.out.println(given + " matched wtf");
-		// int tmp =Integer.parseInt(given.split(" ")[1]) + 1;
-		// if(tmp > ID) {
-		// ID = tmp + 1;
-		//
-		// }
-		// }
-		//
-		// if (CLKsent && given.matches("^\\d+\\s\\d+$")) {
-		// if (Integer.parseInt(given.split(" ")[1]) == ID) {
-		// count++;
-		// total += Integer.parseInt(given.split(" ")[0]);
-		// if (!thr) {
-		// thr = true;
-		// new Thread() {
-		// @Override
-		// public void run() {
-		// try {
-		// sleep(100);
-		// thr = false;
-		// CLKsent = false;
-		// s = total / count;
-		// clock.setClock(s);
-		// System.out.println(s + " synchronized");
-		// total = count = 0;
-		// } catch (InterruptedException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
-		// }
-		// }.start();
-		// }
-		// }
-		// }
 	}
 
 	@Override
@@ -174,6 +122,7 @@ public class MulticastClient extends Thread {
 				socket.receive(packet);
 				String received;
 				received = new String(packet.getData(), 0, packet.getLength());
+
 				System.out.println(received + " (received)");
 				handleCommand(received);
 			}

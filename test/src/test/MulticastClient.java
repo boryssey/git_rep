@@ -21,7 +21,6 @@ public class MulticastClient extends Thread {
 			address = InetAddress.getByName("228.5.6.7");
 			socket.joinGroup(address);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		clock = new Clock(init);
@@ -40,29 +39,8 @@ public class MulticastClient extends Thread {
 				}
 			}
 		}.start();
-		// startSyncThread();
 	}
 
-	// public void startSyncThread() {
-	// new Thread() {
-	// @Override
-	// public void run() {
-	// while(al) {
-	// try {
-	// sleep(getSTime());
-	// sendCLK();
-	// } catch (InterruptedException e) {
-	// // TODO Auto-generated catch block
-	// e.printStackTrace();
-	// }
-	// }
-	// }
-	// }.start();
-	// }
-
-	public long getSTime() {
-		return sync_time;
-	}
 
 	public void sendCLK() {
 		try {
@@ -88,9 +66,6 @@ public class MulticastClient extends Thread {
 
 			while (f) {
 				DatagramPacket packet;
-
-				// get a msg
-
 				byte[] buf = new byte[256];
 
 				packet = new DatagramPacket(buf, buf.length);
@@ -98,9 +73,13 @@ public class MulticastClient extends Thread {
 				String received;
 				received = new String(packet.getData(), 0, packet.getLength());
 				System.out.println(received + " (received)");
+				
+				
 				if (received.equals("CLK")) {
 					new MulticastMessage(clock.getClock() + "");
 				}
+				
+				
 				if(CLKsent && received.matches("\\b([0-9])\\d+\\b")) {
 					count++;
 					total += Integer.parseInt(received);
@@ -126,8 +105,13 @@ public class MulticastClient extends Thread {
 					}
 				}
 			}
+			
+			
 			socket.leaveGroup(address);
 			socket.close();
+			
+			
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

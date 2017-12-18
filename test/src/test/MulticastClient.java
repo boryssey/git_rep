@@ -41,23 +41,39 @@ public class MulticastClient extends Thread {
 		}.start();
 	}
 
-
 	public void sendCLK() {
 		try {
-			new MulticastMessage("CLK");
+			send("CLK");
 			CLKsent = true;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 
 	}
+
+	public void send(String msg) throws IOException {
+
+		byte[] buf = new byte[256];
+
+		// construct msg
+		System.out.println(msg + " (sent)");
+		buf = msg.getBytes();
+
+		// send it
+
+		DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 9999);
+		socket.send(packet);
+
+		// sleep for a while
+
+	}
+
 	boolean thr = false;
 	int count = 0;
 	int total = 0;
 	int s = 0;
-	
+
 	@Override
 	public void run() {
 		boolean f = true;
@@ -73,17 +89,15 @@ public class MulticastClient extends Thread {
 				String received;
 				received = new String(packet.getData(), 0, packet.getLength());
 				System.out.println(received + " (received)");
-				
-				
+
 				if (received.equals("CLK")) {
-					new MulticastMessage(clock.getClock() + "");
+					send(clock.getClock() + "");
 				}
-				
-				
-				if(CLKsent && received.matches("\\b([0-9])\\d+\\b")) {
+
+				if (CLKsent && received.matches("\\b([0-9])\\d+\\b")) {
 					count++;
 					total += Integer.parseInt(received);
-					if(!thr) {
+					if (!thr) {
 						thr = true;
 						new Thread() {
 							@Override
@@ -92,7 +106,7 @@ public class MulticastClient extends Thread {
 									sleep(100);
 									thr = false;
 									CLKsent = false;
-									s = total/count;
+									s = total / count;
 									clock.setClock(s);
 									System.out.println(s + " synchronized");
 									total = count = 0;
@@ -105,13 +119,10 @@ public class MulticastClient extends Thread {
 					}
 				}
 			}
-			
-			
+
 			socket.leaveGroup(address);
 			socket.close();
-			
-			
-			
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

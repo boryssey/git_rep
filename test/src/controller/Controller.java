@@ -8,64 +8,66 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 
 public class Controller {
+	public static void main(String[] args) throws SocketException {
+
+		if (args.length != 3 && args.length != 4) {
+			System.out.println("nope " + args.length);
+			System.exit(1);
+		} else {
+
+			Controller contr = new Controller(args);
+
+			if (args[1].equals("get")) {
+				if (args[2].equals("counter")) {
+					contr.send("get counter");
+					String rep = contr.receiveReply();
+					System.out.println(rep);
+				}
+				if (args[2].equals("period")) {
+					contr.send("get period");
+					String rep = contr.receiveReply();
+					System.out.println(rep);
+				}
+			}
+			if (args[1].equals("set")) {
+				if (args[2].equals("counter")) {
+					try {
+						Integer.parseInt(args[3]);
+					} catch (NumberFormatException e) {
+						System.err.println("Need integer or long by 3rd parameter: " + e);
+						System.exit(4);
+					}
+					contr.send("set counter " + args[3]);
+					String rep = contr.receiveReply();
+					System.out.println(rep);
+				}
+				if (args[2].equals("period")) {
+					try {
+						Long.parseLong(args[3]);
+					} catch (NumberFormatException e) {
+						System.err.println("Need integer or long by 3rd parameter: " + e);
+						System.exit(4);
+					}
+					contr.send("set period" + args[3]);
+					String rep = contr.receiveReply();
+					System.out.println(rep);
+				}
+			}
+		}
+	}
+
 	DatagramSocket socket = null;
 	DatagramPacket packet = null;
 
 	public Controller(String[] a) {
 		try {
 			socket = new DatagramSocket();
-			socket.connect(InetAddress.getByName(a[0]), 9999);
+			socket.connect(InetAddress.getByName(a[0]), 9998);
 
 		} catch (SocketException | UnknownHostException e) {
 			System.err.println("Problems with creating socket: " + e);
 			System.exit(1);
 		}
-	}
-
-	public static void main(String[] args) throws SocketException {
-
-		if (args.length != 2 || args.length != 3) {
-			System.exit(1);
-		}
-		Controller contr = new Controller(args);
-
-		if (args[1].equals("get")) {
-			if (args[2].equals("counter")) {
-				contr.send("get counter");
-				String rep = contr.receiveReply();
-				System.out.println(rep);
-			}
-			if(args[2].equals("period")) {
-				contr.send("get period");
-				String rep = contr.receiveReply();
-				System.out.println(rep);
-			}
-		}
-		if (args[1].equals("set")) {
-			if(args[2].equals("counter")) {	
-				try {
-					Integer.parseInt(args[3]);
-				}catch(NumberFormatException e){
-					System.err.println("Need integer or long by 3rd parameter: " + e);
-					System.exit(4);
-			    }
-				contr.send("set counter " + args[3]);
-				String rep = contr.receiveReply();
-				System.out.println(rep);
-			}
-			if(args[2].equals("period")) {	
-				try {
-					Long.parseLong(args[3]);
-				}catch(NumberFormatException e){
-					System.err.println("Need integer or long by 3rd parameter: " + e);
-					System.exit(4);
-			    }
-				contr.send("set period" + args[3]);
-				String rep = contr.receiveReply();
-				System.out.println(rep);
-			}
-		}
-
 	}
 
 	public void send(String msg) {
@@ -88,6 +90,7 @@ public class Controller {
 
 		// sleep for a while
 	}
+
 	public String receiveReply() {
 		byte[] buf = new byte[256];
 
@@ -95,7 +98,7 @@ public class Controller {
 		try {
 			socket.receive(packet);
 		} catch (IOException e) {
-			
+
 			System.err.println("Problems with receiving reply: " + e);
 			System.exit(3);
 		}

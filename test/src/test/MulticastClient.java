@@ -17,15 +17,20 @@ public class MulticastClient extends Thread {
 	public MulticastClient(int init, long sync_time) {
 		super("MulticastClient");
 		try {
-			socket = new MulticastSocket();
+			socket = new MulticastSocket(9999);
 			address = InetAddress.getByName("228.5.6.7");
-			dsocket = new DatagramSocket(9999);
+			dsocket = new DatagramSocket(9998);
 			socket.joinGroup(address);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		startSendingCLK();
 		clock = new Clock(init);
 		this.sync_time = sync_time;
+	}
+	
+	
+	public void startSendingCLK() {
 		new Thread() {
 			@Override
 			public void run() {
@@ -41,9 +46,9 @@ public class MulticastClient extends Thread {
 				}
 			}
 		}.start();
-
 	}
-
+	
+	
 	public void sendCLK() {
 		try {
 			send("CLK " + InetAddress.getLocalHost());
@@ -158,7 +163,6 @@ public class MulticastClient extends Thread {
 		}
 
 		if (CLKsent && given.matches("^\\d+\\s" + InetAddress.getLocalHost() + "$")) {
-
 			count++;
 			total += Integer.parseInt(given.split(" ")[0]);
 			if (!thr) {
@@ -190,7 +194,6 @@ public class MulticastClient extends Thread {
 		boolean f = true;
 		System.setProperty("java.net.preferIPv4Stack", "true");
 		try {
-
 			while (f) {
 				DatagramPacket packet;
 				byte[] buf = new byte[256];

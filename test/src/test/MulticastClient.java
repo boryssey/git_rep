@@ -1,12 +1,11 @@
 package test;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
+import java.net.*;
 
 public class MulticastClient extends Thread {
 	MulticastSocket socket = null;
+	DatagramSocket dsocket = null;
 	private boolean CLKsent = false;
 	private Clock clock;
 	private InetAddress address;
@@ -18,8 +17,9 @@ public class MulticastClient extends Thread {
 	public MulticastClient(int init, long sync_time) {
 		super("MulticastClient");
 		try {
-			socket = new MulticastSocket(9999);
+			socket = new MulticastSocket();
 			address = InetAddress.getByName("228.5.6.7");
+			dsocket = new DatagramSocket(9999);
 			socket.joinGroup(address);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -70,12 +70,89 @@ public class MulticastClient extends Thread {
 
 	}
 
-	boolean thr = false;
-	int count = 0;
-	int total = 0;
-	int s = 0;
+	public void handleController() {
+		new Thread() {
+			@Override
+			public void run() {
+				while (!dsocket.isClosed()) {
+					DatagramPacket packet;
+					byte[] buf = new byte[256];
+					packet = new DatagramPacket(buf, buf.length);
+					InetAddress addr = packet.getAddress();
+					int length = packet.getLength();
+					try {
+						dsocket.receive(packet);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					String received;
+					received = new String(packet.getData(), 0, packet.getLength());
+					String[] msg = received.split(" ");
+					if (msg.length == 2) {
+						if (msg[2].equals("counter")) {
+							buf = (clock.getClock() + "").getBytes();
+							packet = new DatagramPacket(buf, length, addr, 9999);
+							try {
+								dsocket.send(packet);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+						if (msg[2].equals("period")) {
+							buf = (sync_time + "").getBytes();
+							packet = new DatagramPacket(buf, length, addr, 9999);
+							try {
+								dsocket.send(packet);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+
+					}
+					if (msg.length == 3) {
+						if (msg[2].equals("counter")) {
+							try {
+								int tmp = Integer.parseInt(msg[2]);
+								clock.setClock(tmp);
+								buf = ("ACK").getBytes();
+								packet = new DatagramPacket(buf, length, addr, 9999);
+								try {
+									dsocket.send(packet);
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
+							} catch (NumberFormatException e) {
+							}
+						}
+						if(msg[2].equals("period")) {
+							try {
+								long tmp = Long.parseLong(msg[2]);
+								sync_time = tmp;
+								buf = ("ACK").getBytes();
+								packet = new DatagramPacket(buf, length, addr, 9999);
+								try {
+									dsocket.send(packet);
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
+							} catch (NumberFormatException e) {
+							}
+						}
+					}
+				}
+			}
+		}.start();
+	}
+
+	protected boolean thr = false;
+	protected int count = 0;
+	protected int total = 0;
+	protected int s = 0;
 
 	public void handleCommand(String given) throws IOException {
+
 		if (given.matches("^(CLK)\\s.+$")) {
 			send(clock.getClock() + " " + given.split(" ")[1]);
 		}

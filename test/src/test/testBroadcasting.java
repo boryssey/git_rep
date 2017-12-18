@@ -7,32 +7,17 @@ import javax.swing.plaf.SliderUI;
 
 public class testBroadcasting {
 	public static void main(String[] args) throws IOException {
-		// t.start();
-		 System.setProperty("java.net.preferIPv4Stack", "true");
-			MulticastClient n = new MulticastClient(50, 7000);
-			n.start();
-		//
-//		 Clock n = new Clock(0);
-//		 System.out.println("s");
-		 
 
-//		 MulticastServer s = new MulticastServer();
-//		 s.send("Hello");
-//		 new Thread() {
-//			 @Override
-//			 public void run() {
-//				 try {
-//					 sleep(5000);
-//					 c.sendCLK();
-//				 } catch(InterruptedException | IOException e) {
-//					 e.printStackTrace();
-//				 }
-//				
-//			 }
-//		 }.start();
-
-		// System.out.println("SUCCess");
-
+		System.setProperty("java.net.preferIPv4Stack", "true");
+		MulticastClient n = new MulticastClient(50, 3000);
+		n.start();
+//		String id = "id 5";
+//		String a = "id554";
+//		if(id.matches("^\\b(id)\\b\\s\\d+$")) {
+//			String[] s = id.split(" ");
+//			System.out.println(id.split(" ")[1]);
+//		}
 	}
 
 }
+//CLKsent && given.matches("^\\b(CLK)\\b\\s\\d+$"))

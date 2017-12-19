@@ -1,20 +1,19 @@
-package test;
+package skj.project.Agent;
 
 import java.io.IOException;
 import java.net.*;
 
-public class MulticastClient extends Thread {
-	MulticastSocket socket = null;
-	DatagramSocket dsocket = null;
+public class Agent extends Thread {
+	private MulticastSocket socket = null;
+	private DatagramSocket dsocket = null;
 	private boolean CLKsent = false;
 	private Clock clock;
 	private InetAddress address;
 	private long sync_time;
-	private int id = 0;
 	boolean idb = false;
 	boolean alive = true;
 
-	public MulticastClient(int init, long sync_time) {
+	public Agent(int init, long sync_time) {
 		super("MulticastClient");
 		try {
 			socket = new MulticastSocket(9999);
@@ -87,7 +86,7 @@ public class MulticastClient extends Thread {
 					packet = new DatagramPacket(buf, buf.length);
 
 					try {
-						
+
 						dsocket.receive(packet);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -114,7 +113,7 @@ public class MulticastClient extends Thread {
 						}
 						if (msg[1].equals("period")) {
 							buf = (sync_time + "").getBytes();
-							packet = new DatagramPacket(buf, buf.length, addr, port);	
+							packet = new DatagramPacket(buf, buf.length, addr, port);
 							try {
 								dsocket.send(packet);
 							} catch (IOException e) {
@@ -226,6 +225,28 @@ public class MulticastClient extends Thread {
 			socket.close();
 		}
 		socket.close();
+	}
+
+	public static void main(String[] args) throws IOException {
+		System.setProperty("java.net.preferIPv4Stack", "true");
+		if(args.length != 2) {
+			System.err.println("Two parameters: int and long. Is it so hard?");
+			System.exit(0);
+		}
+		int clock ;
+		Agent n = null;
+		long period;
+		try {
+			clock = Integer.parseInt(args[0]);
+			period = Long.parseLong(args[1]);
+			n = new Agent(clock, period);
+		}catch (NumberFormatException e) {
+			System.err.println("Two parameters: int and long. Is it so hard?");
+			System.exit(0);
+		}
+		n.start();
+		n.handleController();
+		
 	}
 
 }

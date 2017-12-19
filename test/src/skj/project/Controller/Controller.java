@@ -1,4 +1,4 @@
-package controller;
+package skj.project.Controller;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

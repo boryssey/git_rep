@@ -1,4 +1,4 @@
-package test;
+package skj.project.Agent;
 
 public class Timer extends Thread{
 	private Long time;

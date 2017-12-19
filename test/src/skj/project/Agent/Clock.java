@@ -1,4 +1,4 @@
-package test;
+package skj.project.Agent;
 
 public class Clock extends Thread {
 	private int count;

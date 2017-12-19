@@ -69,15 +69,13 @@ public class Agent extends Thread {
 		DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 9999);
 		socket.send(packet);
 
-		// sleep for a while
-
 	}
 
 	public void handleController() {
 		new Thread() {
 			@Override
 			public void run() {
-				InetAddress ip = null;
+				
 				DatagramPacket packet;
 				int port = 0;
 				while (!dsocket.isClosed()) {
@@ -86,7 +84,6 @@ public class Agent extends Thread {
 					packet = new DatagramPacket(buf, buf.length);
 
 					try {
-
 						dsocket.receive(packet);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -95,7 +92,6 @@ public class Agent extends Thread {
 
 					InetAddress addr = packet.getAddress();
 					port = packet.getPort();
-					int length = packet.getLength();
 					String received;
 					received = new String(packet.getData(), 0, packet.getLength());
 					System.out.println(received + "received");
@@ -229,24 +225,24 @@ public class Agent extends Thread {
 
 	public static void main(String[] args) throws IOException {
 		System.setProperty("java.net.preferIPv4Stack", "true");
-		if(args.length != 2) {
+		if (args.length != 2) {
 			System.err.println("Two parameters: int and long. Is it so hard?");
 			System.exit(0);
 		}
-		int clock ;
+		int clock;
 		Agent n = null;
 		long period;
 		try {
 			clock = Integer.parseInt(args[0]);
 			period = Long.parseLong(args[1]);
 			n = new Agent(clock, period);
-		}catch (NumberFormatException e) {
+		} catch (NumberFormatException e) {
 			System.err.println("Two parameters: int and long. Is it so hard?");
 			System.exit(0);
 		}
 		n.start();
 		n.handleController();
-		
+
 	}
 
 }

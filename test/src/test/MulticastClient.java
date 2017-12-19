@@ -19,17 +19,17 @@ public class MulticastClient extends Thread {
 		try {
 			socket = new MulticastSocket(9999);
 			address = InetAddress.getByName("228.5.6.7");
-			dsocket = new DatagramSocket(9998);
+			dsocket = new DatagramSocket(9997);
 			socket.joinGroup(address);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		startSendingCLK();
-		clock = new Clock(init);
 		this.sync_time = sync_time;
+		clock = new Clock(init);
+		startSendingCLK();
+
 	}
-	
-	
+
 	public void startSendingCLK() {
 		new Thread() {
 			@Override
@@ -47,8 +47,7 @@ public class MulticastClient extends Thread {
 			}
 		}.start();
 	}
-	
-	
+
 	public void sendCLK() {
 		try {
 			send("CLK " + InetAddress.getLocalHost());
@@ -79,34 +78,43 @@ public class MulticastClient extends Thread {
 		new Thread() {
 			@Override
 			public void run() {
+				InetAddress ip = null;
+				DatagramPacket packet;
+				int port = 0;
 				while (!dsocket.isClosed()) {
-					DatagramPacket packet;
+
 					byte[] buf = new byte[256];
 					packet = new DatagramPacket(buf, buf.length);
-					InetAddress addr = packet.getAddress();
-					int length = packet.getLength();
+
 					try {
+						
 						dsocket.receive(packet);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+
+					InetAddress addr = packet.getAddress();
+					port = packet.getPort();
+					int length = packet.getLength();
 					String received;
 					received = new String(packet.getData(), 0, packet.getLength());
+					System.out.println(received + "received");
 					String[] msg = received.split(" ");
 					if (msg.length == 2) {
-						if (msg[2].equals("counter")) {
+						if (msg[1].equals("counter")) {
 							buf = (clock.getClock() + "").getBytes();
-							packet = new DatagramPacket(buf, length, addr, 9999);
+							packet = new DatagramPacket(buf, buf.length, addr, port);
 							try {
 								dsocket.send(packet);
 							} catch (IOException e) {
 								e.printStackTrace();
+
 							}
 						}
-						if (msg[2].equals("period")) {
+						if (msg[1].equals("period")) {
 							buf = (sync_time + "").getBytes();
-							packet = new DatagramPacket(buf, length, addr, 9999);
+							packet = new DatagramPacket(buf, buf.length, addr, port);	
 							try {
 								dsocket.send(packet);
 							} catch (IOException e) {
@@ -117,12 +125,12 @@ public class MulticastClient extends Thread {
 
 					}
 					if (msg.length == 3) {
-						if (msg[2].equals("counter")) {
+						if (msg[1].equals("counter")) {
 							try {
 								int tmp = Integer.parseInt(msg[2]);
 								clock.setClock(tmp);
 								buf = ("ACK").getBytes();
-								packet = new DatagramPacket(buf, length, addr, 9999);
+								packet = new DatagramPacket(buf, buf.length, addr, port);
 								try {
 									dsocket.send(packet);
 								} catch (IOException e) {
@@ -131,12 +139,12 @@ public class MulticastClient extends Thread {
 							} catch (NumberFormatException e) {
 							}
 						}
-						if(msg[2].equals("period")) {
+						if (msg[1].equals("period")) {
 							try {
 								long tmp = Long.parseLong(msg[2]);
 								sync_time = tmp;
 								buf = ("ACK").getBytes();
-								packet = new DatagramPacket(buf, length, addr, 9999);
+								packet = new DatagramPacket(buf, buf.length, addr, port);
 								try {
 									dsocket.send(packet);
 								} catch (IOException e) {
@@ -146,6 +154,7 @@ public class MulticastClient extends Thread {
 							}
 						}
 					}
+
 				}
 			}
 		}.start();

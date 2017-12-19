@@ -58,11 +58,12 @@ public class Controller {
 
 	DatagramSocket socket = null;
 	DatagramPacket packet = null;
-
+	InetAddress addr = null;
 	public Controller(String[] a) {
 		try {
 			socket = new DatagramSocket();
-			socket.connect(InetAddress.getByName(a[0]), 9998);
+			addr = InetAddress.getByName(a[0]);
+//			socket.connect(InetAddress.getByName(a[0]), 9997);
 
 		} catch (SocketException | UnknownHostException e) {
 			System.err.println("Problems with creating socket: " + e);
@@ -79,9 +80,10 @@ public class Controller {
 		buf = msg.getBytes();
 		// send it
 
-		DatagramPacket packet = new DatagramPacket(buf, buf.length);
+		DatagramPacket packet = new DatagramPacket(buf, buf.length, addr, 9997);
 		try {
 			socket.send(packet);
+			System.out.println(msg);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			System.err.println("Problems with sending message: " + e);

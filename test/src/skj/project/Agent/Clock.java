@@ -1,10 +1,10 @@
 package skj.project.Agent;
 
 public class Clock extends Thread {
-	private int count;
+	private long count;
 	private boolean al = true;
 
-	public Clock(int init) {
+	public Clock(long init) {
 		count = init;
 		start();
 	}
@@ -14,7 +14,7 @@ public class Clock extends Thread {
 
 	}
 
-	public void setClock(int given) {
+	public void setClock(long given) {
 		count = given;
 	}
 
@@ -22,7 +22,7 @@ public class Clock extends Thread {
 	public void run() {
 		while (al) {
 			try {
-				sleep(1000);
+				sleep(1);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

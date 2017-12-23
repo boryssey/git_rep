@@ -20,12 +20,12 @@ public class Controller {
 			if (args[1].equals("get")) {
 				if (args[2].equals("counter")) {
 					contr.send("get counter");
-					String rep = contr.receiveReply();
+					String rep = contr.receiveMessage();
 					System.out.println(rep);
 				}
 				if (args[2].equals("period")) {
 					contr.send("get period");
-					String rep = contr.receiveReply();
+					String rep = contr.receiveMessage();
 					System.out.println(rep);
 				}
 			}
@@ -34,22 +34,22 @@ public class Controller {
 					try {
 						Integer.parseInt(args[3]);
 					} catch (NumberFormatException e) {
-						System.err.println("Need integer or long by 3rd parameter: " + e);
+						System.err.println("Need long as 3rd parameter: " + e);
 						System.exit(4);
 					}
 					contr.send("set counter " + args[3]);
-					String rep = contr.receiveReply();
+					String rep = contr.receiveMessage();
 					System.out.println(rep);
 				}
 				if (args[2].equals("period")) {
 					try {
 						Long.parseLong(args[3]);
 					} catch (NumberFormatException e) {
-						System.err.println("Need integer or long by 3rd parameter: " + e);
+						System.err.println("Need long as 3rd parameter: " + e);
 						System.exit(4);
 					}
 					contr.send("set period" + args[3]);
-					String rep = contr.receiveReply();
+					String rep = contr.receiveMessage();
 					System.out.println(rep);
 				}
 			}
@@ -78,22 +78,19 @@ public class Controller {
 		// construct msg
 
 		buf = msg.getBytes();
-		// send it
-
 		DatagramPacket packet = new DatagramPacket(buf, buf.length, addr, 9997);
 		try {
+			// send it
 			socket.send(packet);
 			System.out.println(msg);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			System.err.println("Problems with sending message: " + e);
 			System.exit(2);
 		}
 
-		// sleep for a while
 	}
 
-	public String receiveReply() {
+	public String receiveMessage() {
 		byte[] buf = new byte[256];
 
 		packet = new DatagramPacket(buf, buf.length);

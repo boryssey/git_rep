@@ -33,17 +33,14 @@ public class Controller {
 				if (args[2].equals("counter")) {
 					try {
 						Integer.parseInt(args[3]);
-						
 					} catch (NumberFormatException e) {
 						System.err.println("Need long as 3rd parameter: " + e);
 						System.exit(4);
 					}
-					
 					contr.send("set counter " + args[3]);
 					String rep = contr.receiveMessage();
 					System.out.println(rep);
 				}
-				
 				if (args[2].equals("period")) {
 					try {
 						Long.parseLong(args[3]);
@@ -51,7 +48,7 @@ public class Controller {
 						System.err.println("Need long as 3rd parameter: " + e);
 						System.exit(4);
 					}
-					contr.send("set period " + args[3]);
+					contr.send("set period" + args[3]);
 					String rep = contr.receiveMessage();
 					System.out.println(rep);
 				}
@@ -66,6 +63,8 @@ public class Controller {
 		try {
 			socket = new DatagramSocket();
 			addr = InetAddress.getByName(a[0]);
+//			socket.connect(InetAddress.getByName(a[0]), 9997);
+
 		} catch (SocketException | UnknownHostException e) {
 			System.err.println("Problems with creating socket: " + e);
 			System.exit(1);

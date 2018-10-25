@@ -6,10 +6,8 @@ import java.net.*;
 public class Agent extends Thread {
 	private MulticastSocket socket = null; // Socket which sends and receives packets to/from broadcast IP
 	private DatagramSocket dsocket = null; // Socket which sends and receives packets to/from Controller
-	private boolean CLKsent = false; // true if we sent a CLK request /
-										//false if we didn't send CLK request yet
-											// or
-										// we finished receiving responses to CLK request
+	private boolean CLKsent = false; // true if we sent a CLK request / false if we didn't sent CLK request yet or we
+										// finished receiving responses to CLK request
 	private Clock clock;
 	private InetAddress address; // Broadcast IP;
 	private long period; // Period
@@ -243,6 +241,7 @@ public class Agent extends Thread {
 			socket.leaveGroup(address);
 			socket.close();
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.exit(-1);
 		}
